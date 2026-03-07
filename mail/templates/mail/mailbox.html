@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <title>Mini Email Client</title>
+    <!-- local Bootstrap copy -->
+    <link href="{% static 'mail/bootstrap.min.css' %}" rel="stylesheet">
+    <style>
+        body { padding: 20px; }
+        .unread { font-weight: 600; }
+        #send-msg { min-height: 1.5em; }
+    </style>
+</head>
+<body>
+<!-- navigation bar with compose button -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Мини‑почта</a>
+        <button class="btn btn-outline-primary me-2" data-bs-toggle="offcanvas" data-bs-target="#composeOffcanvas">
+            Написать
+        </button>
+        <button id="loginNavBtn" class="btn btn-outline-secondary me-2" data-bs-toggle="modal" data-bs-target="#loginModal">
+            Вход
+        </button>
+        <button id="logoutNavBtn" class="btn btn-outline-danger me-2 d-none">
+            Выход
+        </button>
+        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#registerModal">
+            Регистрация
+        </button>
+        <span id="user-info" class="ms-2"></span>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- sidebar folders -->
+        <div class="col-md-3">
+            <div class="list-group" id="folder-list">
+                <a href="#" class="list-group-item list-group-item-action active" data-folder="inbox">
+                    Входящие
+                </a>
+                <a href="#" class="list-group-item list-group-item-action" data-folder="sent">
+                    Отправленные
+                </a>
+                <a href="#" class="list-group-item list-group-item-action" data-folder="trash">
+                    Корзина
+                </a>
+                <a href="#" class="list-group-item list-group-item-action" data-folder="archive">
+                    Архив
+                </a>
+            </div>
+        </div>
+
+        <!-- main area -->
+        <div class="col-md-9">
+            <div id="email-list" class="list-group mb-3"></div>
+        </div>
+    </div>
+</div>
+
+<!-- compose offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="composeOffcanvas">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Написать письмо</h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="mb-3">
+        <label class="form-label">От</label>
+        <select id="sender" class="form-select"></select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Кому</label>
+        <select id="receiver" class="form-select"></select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Тема</label>
+        <input id="subject" type="text" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Текст</label>
+        <textarea id="body" rows="6" class="form-control"></textarea>
+    </div>
+    <button id="send-btn" class="btn btn-primary w-100">Отправить</button>
+    <div id="send-msg" class="text-success mt-2"></div>
+  </div>
+</div>
+
+<!-- email detail modal -->
+<div class="modal fade" id="emailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="emailModalLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="emailModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- login modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Вход</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Имя пользователя</label>
+          <input id="login-username" type="text" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Пароль</label>
+          <input id="login-password" type="password" class="form-control">
+        </div>
+        <div id="login-msg" class="text-danger"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="login-btn" class="btn btn-primary">Войти</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- registration modal -->
+<div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Регистрация</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Имя пользователя</label>
+          <input id="reg-username" type="text" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input id="reg-email" type="email" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Пароль</label>
+          <input id="reg-password" type="password" class="form-control">
+        </div>
+        <div id="reg-msg" class="text-danger"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="reg-btn" class="btn btn-primary">Зарегистрироваться</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- scripts -->
+<script>
+// helpers
+function jsonRequest(url, method='GET', data=null) {
+    const opts = {method, headers:{'Content-Type':'application/json'}, credentials: 'same-origin'};
+    if (data) opts.body = JSON.stringify(data);
+    return fetch(url, opts).then(r=>r.json());
+}
+
+let currentFolder = 'inbox';
+let currentEmailId = null;
+let currentUser = null; // logged-in user info
+
+function loadUsers() {
+    jsonRequest('users/').then(users => {
+        const sender = document.getElementById('sender');
+        const receiver = document.getElementById('receiver');
+        sender.innerHTML = '';
+        receiver.innerHTML = '';
+        users.forEach(u=>{
+            const o1=document.createElement('option'); o1.value=u.id; o1.text=u.username;
+            const o2=document.createElement('option'); o2.value=u.id; o2.text=u.username;
+            sender.appendChild(o1);
+            receiver.appendChild(o2);
+        });
+        if (currentUser && currentUser.id) {
+            sender.value = currentUser.id;
+            sender.disabled = true;
+        } else {
+            sender.disabled = false;
+        }
+    });
+}
+
+function sendEmail() {
+    const data = {
+        sender: document.getElementById('sender').value,
+        receiver: document.getElementById('receiver').value,
+        subject: document.getElementById('subject').value,
+        body: document.getElementById('body').value
+    };
+    jsonRequest('send/', 'POST', data).then(resp=>{
+        document.getElementById('send-msg').textContent = resp.message || 'Готово';
+        setTimeout(()=>{document.getElementById('send-msg').textContent='';},2000);
+        loadFolder(currentFolder);
+    });
+}
+
+function loadFolder(folder) {
+    currentFolder = folder;
+    currentEmailId = null;
+    // highlight selected folder in sidebar
+    document.querySelectorAll('#folder-list a').forEach(a=>{
+        a.classList.toggle('active', a.dataset.folder === folder);
+    });
+    jsonRequest(`emails/${folder}/`).then(emails=>{
+        const list = document.getElementById('email-list');
+        list.innerHTML = '';
+        emails.forEach(e=>{
+            const item = document.createElement('a');
+            item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center' + (e.is_read? '' : ' unread');
+            item.innerHTML = `<span>${e.sender} → ${e.subject}</span>`;
+            item.onclick = ()=> showEmail(e.id);
+            list.appendChild(item);
+        });
+    });
+}
+
+function showEmail(id) {
+    currentEmailId = id;
+    jsonRequest(`email/${id}/`).then(e=>{
+        const modalLabel = document.getElementById('emailModalLabel');
+        const modalBody = document.getElementById('emailModalBody');
+        modalLabel.textContent = e.subject;
+        modalBody.innerHTML = `
+            <p><strong>От:</strong> ${e.sender}<br>
+               <strong>Кому:</strong> ${e.receiver}<br>
+               <strong>Дата:</strong> ${e.date}</p>
+            <hr>
+            <div>${e.body.replace(/\n/g,'<br>')}</div>
+            <div class="mt-3">
+              <button id="move-trash" class="btn btn-outline-secondary btn-sm me-1">В корзину</button>
+              <button id="move-archive" class="btn btn-outline-secondary btn-sm me-1">В архив</button>
+              <button id="delete-email" class="btn btn-danger btn-sm">Удалить</button>
+            </div>
+        `;
+        document.getElementById('move-trash').onclick = ()=> moveEmail('trash');
+        document.getElementById('move-archive').onclick = ()=> moveEmail('archive');
+        document.getElementById('delete-email').onclick = deleteEmail;
+        loadFolder(currentFolder); // refresh list to clear unread styling
+        // show modal
+        var emailModal = new bootstrap.Modal(document.getElementById('emailModal'));
+        emailModal.show();
+    });
+}
+
+function moveEmail(folder) {
+    if (!currentEmailId) return;
+    jsonRequest(`email/${currentEmailId}/move/`, 'PUT', {folder}).then(resp=>{
+        loadFolder(currentFolder);
+        if (folder===currentFolder) showEmail(currentEmailId);
+    });
+}
+
+function deleteEmail() {
+    if (!currentEmailId) return;
+    jsonRequest(`email/${currentEmailId}/delete/`, 'DELETE').then(resp=>{
+        currentEmailId = null;
+        document.getElementById('email-detail').innerHTML='';
+        loadFolder(currentFolder);
+    });
+}
+
+// wire up
+document.getElementById('send-btn').onclick = () => {
+    sendEmail();
+    // close offcanvas after sending
+    var off = bootstrap.Offcanvas.getInstance(document.getElementById('composeOffcanvas'));
+    if (off) off.hide();
+};
+document.querySelectorAll('#folder-list a').forEach(a=>{
+    a.onclick = e=>{e.preventDefault(); loadFolder(a.dataset.folder);};
+});
+
+// registration helper
+function registerUser() {
+    const username = document.getElementById('reg-username').value;
+    const email    = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-password').value;
+    if (!username || !password) {
+        document.getElementById('reg-msg').textContent = 'Имя и пароль обязательны';
+        return;
+    }
+    jsonRequest('register/', 'POST', {username, email, password}).then(resp=>{
+        document.getElementById('reg-msg').textContent = resp.message || 'Готово';
+        setTimeout(()=>{
+            document.getElementById('reg-msg').textContent = '';
+            var modal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+            if (modal) modal.hide();
+            // automatically set current user to newly created account and login
+            if (resp.id) {
+                currentUser = {id: resp.id, username: resp.username};
+                updateUI();
+                // perform a login request to obtain session cookie
+                jsonRequest('login/', 'POST', {username, password});
+            }
+            loadUsers();
+        }, 1500);
+    }).catch(err=>{
+        document.getElementById('reg-msg').textContent = err.message || 'Ошибка';
+    });
+}
+
+// authentication helpers
+function updateUI() {
+    const info = document.getElementById('user-info');
+    const loginBtn = document.getElementById('loginNavBtn');
+    const logoutBtn = document.getElementById('logoutNavBtn');
+    const regBtn = document.querySelector('button[data-bs-target="#registerModal"]');
+    if (currentUser && currentUser.id) {
+        info.textContent = 'Пользователь: ' + currentUser.username;
+        loginBtn.classList.add('d-none');
+        logoutBtn.classList.remove('d-none');
+        if (regBtn) regBtn.classList.add('d-none');
+    } else {
+        info.textContent = '';
+        loginBtn.classList.remove('d-none');
+        logoutBtn.classList.add('d-none');
+        if (regBtn) regBtn.classList.remove('d-none');
+    }
+}
+
+function loadCurrentUser() {
+    jsonRequest('current_user/').then(u=>{
+        if (u && u.id) {
+            currentUser = u;
+        } else {
+            currentUser = null;
+        }
+        updateUI();
+        loadUsers();
+    });
+}
+
+function loginUser() {
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+    if (!username || !password) {
+        document.getElementById('login-msg').textContent = 'Имя и пароль обязательны';
+        return;
+    }
+    jsonRequest('login/', 'POST', {username, password}).then(resp=>{
+        var modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        if (modal) modal.hide();
+        document.getElementById('login-msg').textContent = '';
+        loadCurrentUser();
+    }).catch(err=>{
+        document.getElementById('login-msg').textContent = err.message || 'Ошибка';
+    });
+}
+
+function logoutUser() {
+    jsonRequest('logout/', 'POST').then(()=>{
+        currentUser = null;
+        updateUI();
+        loadUsers();
+        loadFolder('inbox');
+    });
+}
+
+// wire up
+ document.getElementById('reg-btn').onclick = registerUser;
+ document.getElementById('login-btn').onclick = loginUser;
+ document.getElementById('logoutNavBtn').onclick = logoutUser;
+
+// initial load
+loadCurrentUser();
+loadFolder('inbox');
+// enable bootstrap components
+</script>
+<!-- local bootstrap bundle -->
+<script src="{% static 'mail/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

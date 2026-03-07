@@ -1,0 +1,9 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^source venv/Scripts/activate$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "\"c:/Users/timof/Desktop/1": true
+    }
+}
