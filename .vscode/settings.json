@@ -5,5 +5,10 @@
             "matchCommandLine": true
         },
         "\"c:/Users/timof/Desktop/1": true
+    },
+    "python.analysis.typeCheckingMode": "off",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingTypeStubs": "none",
+        "reportMissingImports": "none"
     }
 }
